@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: linear-gradient(to bottom,  #1E90FF, #00BFFF, #87CEFA, #ADD8E6, #E0FFFF, #E0FFFF );
+            font-family: 'Exima Geometric', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #E0FFFF; /* Cor de fundo igual à tabela do jogo */
+            border-radius: 20px; /* Borda arredondada */
+            padding: 20px; /* Espaçamento interno */
+            border: 5px solid black; /* Borda preta */
+            box-shadow: 0px 15px 15px rgba(0,0,0,0.5);
+            background: linear-gradient(to bottom, white, #DCDCDC, #1E90FF, #87CEFA);
+        }
+
+        table.score-table {
+            width: 100%; /* Largura total */
+            border-collapse: collapse; /* Separação das bordas da tabela */
+            margin-bottom: 20px; /* Espaçamento inferior */
+
+        }
+
+        table.score-table th,
+        table.score-table td {
+            padding: 10px;
+            text-align: center;
+            border: 2px solid black; /* Borda preta */
+        }
+
+        table.board {
+            background-color: white; /* Fundo da tabela branca */
+            border-collapse: collapse; /* Separação das bordas da tabela */
+            border-spacing: 15px; /* Espaçamento entre células */
+            overflow: hidden; /* Oculta as bordas que ultrapassam o raio de arredondamento */
+            display: none; /* Inicialmente, a tabela do jogo está oculta */
+        }   
+
+        table.board td {
+            background-color: white; /* Fundo das células branco */
+            width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 0;
+            cursor: pointer;
+            border: 2px solid black;
+            border-radius: 20px; /* Borda arredondada */
+        }
+
+        table.board td img {
+            width: 100px;
+            height: 100px;
+        }
+
+        /* Estilos para o botão de reinício */
+        #restart-button {
+            background-color: #00FFFF; /* Cor de fundo verde */
+            color: white; /* Cor do texto branco */
+            padding: 10px 20px; /* Espaçamento interno */
+            font-size: 20px; /* Tamanho da fonte */
+            border: none; /* Sem borda */
+            cursor: pointer;
+            border-radius: 20px;
+            margin-top: 20px; /* Espaçamento superior */
+        }
+
+        #restart-button:hover {
+            background-color: #1E90FF;
+            border: none; /* Cor de fundo verde mais escura ao passar o mouse */
+        }
+
+        /* Estilos para o menu */
+        #menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #E0FFFF;
+            border-radius: 20px;
+            padding: 20px;
+            border: 5px solid black;
+            box-shadow: 0px 15px 15px rgba(0,0,0,0.5);
+            margin-top: 20px;
+            position: absolute; /* Posição absoluta para sobrepor o jogo */
+        }
+
+        #menu h2 {
+            margin-bottom: 10px;
+        }
+
+        #menu button {
+            background-color: #00FFFF;
+            color: white;
+            padding: 20px 30px;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        #menu button:hover {
+            background-color: #1E90FF;
+        }
+    </style>
+    <title>JOGO DA VELHA</title>
+</head>
+<body>
+    <div class="game-container">
+        <table class="score-table">
+            <tr>
+                <th> X</th>
+                <th> O</th>
+            </tr>
+            <tr>
+                <td id="playerXScore">0</td>
+                <td id="playerOScore">0</td>
+            </tr>
+        </table>
+        <h1>Jogo da Velha</h1>
+        <table class="board">
+            <tr>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+            </tr>
+            <tr>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+            </tr>
+            <tr>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+                <td onclick="makeMove(this)"></td>
+            </tr>
+        </table>
+    </div>
+
+    <p id="winner"></p>
+
+    <!-- Botão de reinício estilizado -->
+    <button id="restart-button" onclick="resetGame()">Reiniciar Jogo</button>
+
+    <!-- Menu para escolher o símbolo -->
+    <div id="menu" style="display: none;">
+        <h2>Escolha seu símbolo:</h2>
+        <button onclick="startNewGame('X')">Jogar como X</button>
+        <button onclick="startNewGame('O')">Jogar como O</button>
+    </div>
+
+    <script>
+        let currentPlayer = 'X';
+        let board = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ];
+        let gameEnded = false;
+        let playerXScore = 0;
+        let playerOScore = 0;
+
+        function makeMove(cell) {
+            if (gameEnded) return;
+
+            const rowIndex = cell.parentNode.rowIndex;
+            const cellIndex = cell.cellIndex;
+
+            if (!board[rowIndex][cellIndex]) {
+                board[rowIndex][cellIndex] = currentPlayer;
+                const img = document.createElement('img');
+                img.src = `${currentPlayer}.png`;
+                img.alt = currentPlayer;
+                cell.appendChild(img);
+                currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+                checkForWinner();
+            }
+        }
+
+        function checkForWinner() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
+                [0, 4, 8], [2, 4, 6] // Diagonais
+            ];
+
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+                if (board[Math.floor(a / 3)][a % 3] &&
+                    board[Math.floor(a / 3)][a % 3] === board[Math.floor(b / 3)][b % 3] &&
+                    board[Math.floor(a / 3)][a % 3] === board[Math.floor(c / 3)][c % 3]) {
+                    document.getElementById('winner').textContent = `Jogador ${board[Math.floor(a / 3)][a % 3]} venceu!`;
+                    gameEnded = true;
+
+                    // Atualizar pontuação
+                    if (board[Math.floor(a / 3)][a % 3] === 'X') {
+                        playerXScore++;
+                    } else {
+                        playerOScore++;
+                    }
+                    updateScore();
+                    showRestartButton();
+                    return;
+                }
+            }
+            if (board.flat().every(cell => cell !== '')) {
+                document.getElementById('winner').textContent = "Empate!";
+                gameEnded = true;
+                showRestartButton();
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('playerXScore').textContent = playerXScore;
+            document.getElementById('playerOScore').textContent = playerOScore;
+        }
+
+        function showRestartButton() {
+            const restartButton = document.getElementById('restart-button');
+            restartButton.style.display = 'block';
+        }
+
+        // Função para exibir o menu de escolha de jogador
+        function showMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = 'block';
+        }
+
+        // Função para iniciar o jogo com o jogador escolhido
+        function startNewGame(player) {
+            currentPlayer = player;
+            board = [
+                ['', '', ''],
+                ['', '', ''],
+                ['', '', '']
+            ];
+            gameEnded = false;
+            document.getElementById('winner').textContent = '';
+
+            // Limpar todas as células da tabela
+            const cells = document.querySelectorAll('table.board td');
+            cells.forEach(cell => {
+                cell.innerHTML = '';
+            });
+
+            // Ocultar o menu e exibir a tabela do jogo
+            document.getElementById('menu').style.display = 'none';
+            document.querySelector('.board').style.display = 'table';
+        }
+
+        // Função para reiniciar o jogo
+        function resetGame() {
+            currentPlayer = 'X';
+            board = [
+                ['', '', ''],
+                ['', '', ''],
+                ['', '', '']
+            ];
+            gameEnded = false;
+            document.getElementById('winner').textContent = '';
+
+            // Limpar todas as células da tabela
+            const cells = document.querySelectorAll('table.board td');
+            cells.forEach(cell => {
+                cell.innerHTML = '';
+            });
+
+            // Ocultar a tabela do jogo e exibir o menu
+            document.querySelector('.board').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
